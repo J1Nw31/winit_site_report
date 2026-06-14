@@ -46,12 +46,14 @@ https://你的域名/?site=LS03
 
 站点格式支持 2-6 个英文字母加 2-4 位数字。
 
-项目根目录的 `Generate-Site-QR.ps1` 可以批量生成二维码：
+在 `C:\Winit\Web_report` 中运行 `Generate-Site-QR.ps1` 可以批量生成二维码：
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass `
   -File .\Generate-Site-QR.ps1 -Site LS01,LS02,LS03
 ```
+
+二维码保存在本项目的 `qr` 目录。
 
 ## GitHub Pages 快速部署
 
