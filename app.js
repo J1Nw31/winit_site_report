@@ -1,18 +1,18 @@
-(() => {
+(function () {
   "use strict";
 
-  const form = document.querySelector("#report-form");
-  const siteInput = document.querySelector("#site");
-  const siteLock = document.querySelector("#site-lock");
-  const descriptionEnabled = document.querySelector("#description-enabled");
-  const problemSection = document.querySelector("#problem-section");
-  const problemInput = document.querySelector("#problem");
-  const characterCount = document.querySelector("#character-count");
-  const submitButton = document.querySelector("#submit-button");
-  const buttonText = document.querySelector("#button-text");
-  const status = document.querySelector("#status");
+  var form = document.getElementById("report-form");
+  var siteInput = document.getElementById("site");
+  var siteLock = document.getElementById("site-lock");
+  var descriptionEnabled = document.getElementById("description-enabled");
+  var problemSection = document.getElementById("problem-section");
+  var problemInput = document.getElementById("problem");
+  var characterCount = document.getElementById("character-count");
+  var submitButton = document.getElementById("submit-button");
+  var buttonText = document.getElementById("button-text");
+  var status = document.getElementById("status");
 
-  const text = {
+  var text = {
     title: "\u7ad9\u70b9\u62a5\u4fee",
     invalidSite: "\u8bf7\u8f93\u5165\u6709\u6548\u7ad9\u70b9\u53f7\uff0c\u4f8b\u5982 LS01\u3002",
     genericFailure: "\u53d1\u9001\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002",
@@ -29,94 +29,192 @@
     timeLabel: "\u65f6\u95f4"
   };
 
-  const sitePattern = /^[A-Z]{2,6}\d{2,4}$/;
-  const querySite = new URLSearchParams(window.location.search)
-    .get("site")
-    ?.trim()
-    .toUpperCase();
+  var sitePattern = /^[A-Z]{2,6}\d{2,4}$/;
+  var querySite = getQueryParameter("site");
+  var cooldownRemaining = 0;
+  var cooldownTimer = null;
+  var sending = false;
 
-  let cooldownRemaining = 0;
-  let cooldownTimer = null;
+  if (querySite) {
+    querySite = querySite.replace(/^\s+|\s+$/g, "").toUpperCase();
+  }
 
   if (querySite && sitePattern.test(querySite)) {
     siteInput.value = querySite;
     siteInput.readOnly = true;
-    siteLock.hidden = false;
-    document.title = `${querySite} - WINIT ${text.title}`;
+    siteLock.style.display = "inline";
+    document.title = querySite + " - WINIT " + text.title;
   }
 
-  problemInput.addEventListener("input", () => {
-    characterCount.textContent = `${problemInput.value.length} / 500`;
+  addEvent(problemInput, "input", function () {
+    characterCount.innerHTML = problemInput.value.length + " / 500";
   });
 
-  descriptionEnabled.addEventListener("change", () => {
-    problemSection.hidden = !descriptionEnabled.checked;
-    if (descriptionEnabled.checked) {
-      problemInput.focus();
-    } else {
-      problemInput.value = "";
-      characterCount.textContent = "0 / 500";
-    }
+  addEvent(descriptionEnabled, "change", toggleProblemSection);
+  addEvent(descriptionEnabled, "click", function () {
+    window.setTimeout(toggleProblemSection, 0);
   });
 
-  siteInput.addEventListener("input", () => {
+  addEvent(siteInput, "input", function () {
     siteInput.value = siteInput.value.toUpperCase().replace(/\s+/g, "");
   });
 
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    if (cooldownRemaining > 0) return;
+  addEvent(form, "submit", submitReport);
+  addEvent(submitButton, "click", function (event) {
+    if (event && event.preventDefault) {
+      event.preventDefault();
+    }
+    submitReport(event);
+    return false;
+  });
 
-    const site = siteInput.value.trim().toUpperCase();
-    const problem = problemInput.value.trim();
+  function toggleProblemSection() {
+    if (descriptionEnabled.checked) {
+      problemSection.style.display = "block";
+      problemSection.removeAttribute("hidden");
+      problemInput.focus();
+    } else {
+      problemSection.style.display = "none";
+      problemSection.setAttribute("hidden", "hidden");
+      problemInput.value = "";
+      characterCount.innerHTML = "0 / 500";
+    }
+  }
+
+  function submitReport(event) {
+    if (event && event.preventDefault) {
+      event.preventDefault();
+    }
+
+    if (sending || cooldownRemaining > 0) {
+      return false;
+    }
+
+    var site = siteInput.value.replace(/^\s+|\s+$/g, "").toUpperCase();
+    var problem = problemInput.value.replace(/^\s+|\s+$/g, "");
 
     if (!sitePattern.test(site)) {
       showStatus(text.invalidSite, "error");
       siteInput.focus();
-      return;
+      return false;
     }
 
     setSending(true);
-
-    try {
-      const response = await sendReport(site, problem);
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result.error || text.genericFailure);
+    sendReport(site, problem, function (error) {
+      if (error) {
+        setSending(false);
+        showStatus(error, "error");
+        return;
       }
 
       problemInput.value = "";
-      characterCount.textContent = "0 / 500";
+      characterCount.innerHTML = "0 / 500";
       showStatus(text.success, "success");
       startCooldown(20);
-    } catch (error) {
-      setSending(false);
-      showStatus(error.message || text.networkFailure, "error");
-    }
-  });
+    });
 
-  function setSending(sending) {
-    submitButton.disabled = sending;
-    buttonText.textContent = sending ? text.sending : text.send;
+    return false;
+  }
+
+  function sendReport(site, problem, callback) {
+    var config = window.REPORT_CONFIG || {};
+    var server = String(config.ntfyServer || "https://ntfy.sh")
+      .replace(/\/+$/, "");
+    var topic = String(config.ntfyTopic || "")
+      .replace(/^\s+|\s+$/g, "");
+
+    if (!topic) {
+      callback(text.noService);
+      return;
+    }
+
+    var issue = problem || text.noProblem;
+    var now = new Date();
+    var timeText =
+      now.getFullYear() + "-" +
+      pad(now.getMonth() + 1) + "-" +
+      pad(now.getDate()) + " " +
+      pad(now.getHours()) + ":" +
+      pad(now.getMinutes()) + ":" +
+      pad(now.getSeconds());
+    var payload = JSON.stringify({
+      topic: topic,
+      title: text.reportTitle + " - " + site,
+      message:
+        text.siteLabel + "\uff1a" + site + "\n" +
+        text.problemLabel + "\uff1a" + issue + "\n" +
+        text.timeLabel + "\uff1a" + timeText,
+      priority: 5,
+      tags: ["rotating_light", "wrench"]
+    });
+
+    var request = createRequest();
+    if (!request) {
+      callback(text.networkFailure);
+      return;
+    }
+
+    request.onreadystatechange = function () {
+      if (request.readyState !== 4) {
+        return;
+      }
+      if (request.status >= 200 && request.status < 300) {
+        callback(null);
+      } else {
+        callback(text.genericFailure);
+      }
+    };
+    request.onerror = function () {
+      callback(text.networkFailure);
+    };
+
+    try {
+      request.open("POST", server + "/", true);
+      request.setRequestHeader(
+        "Content-Type",
+        "application/json; charset=utf-8"
+      );
+      request.send(payload);
+    } catch (error) {
+      callback(text.networkFailure);
+    }
+  }
+
+  function createRequest() {
+    if (window.XMLHttpRequest) {
+      return new XMLHttpRequest();
+    }
+    try {
+      return new ActiveXObject("Microsoft.XMLHTTP");
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function setSending(value) {
+    sending = value;
+    submitButton.disabled = value;
+    buttonText.innerHTML = value ? text.sending : text.send;
   }
 
   function showStatus(message, type) {
-    status.textContent = message;
-    status.className = `status ${type || ""}`;
+    status.innerHTML = message;
+    status.className = "status " + (type || "");
   }
 
   function startCooldown(seconds) {
     window.clearInterval(cooldownTimer);
+    sending = false;
     cooldownRemaining = seconds;
     submitButton.disabled = true;
     updateCooldownText();
 
-    cooldownTimer = window.setInterval(() => {
+    cooldownTimer = window.setInterval(function () {
       cooldownRemaining -= 1;
       if (cooldownRemaining <= 0) {
         window.clearInterval(cooldownTimer);
         submitButton.disabled = false;
-        buttonText.textContent = text.send;
+        buttonText.innerHTML = text.send;
         return;
       }
       updateCooldownText();
@@ -124,44 +222,33 @@
   }
 
   function updateCooldownText() {
-    buttonText.textContent = `${cooldownRemaining}${text.cooldownSuffix}`;
+    buttonText.innerHTML =
+      cooldownRemaining + text.cooldownSuffix;
   }
 
-  async function sendReport(site, problem) {
-    const config = window.REPORT_CONFIG || {};
-    if (config.mode !== "direct") {
-      return fetch("/api/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ site, problem })
-      });
+  function getQueryParameter(name) {
+    var query = window.location.search.substring(1).split("&");
+    var index;
+    for (index = 0; index < query.length; index += 1) {
+      var pair = query[index].split("=");
+      if (decodeURIComponent(pair[0] || "") === name) {
+        return decodeURIComponent((pair[1] || "").replace(/\+/g, " "));
+      }
     }
-
-    const server = String(config.ntfyServer || "https://ntfy.sh")
-      .replace(/\/+$/, "");
-    const topic = String(config.ntfyTopic || "").trim();
-    if (!topic) throw new Error(text.noService);
-
-    const issue = problem || text.noProblem;
-    const sydneyTime = new Intl.DateTimeFormat("zh-CN", {
-      timeZone: "Australia/Sydney",
-      dateStyle: "medium",
-      timeStyle: "medium"
-    }).format(new Date());
-
-    return fetch(`${server}/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify({
-        topic,
-        title: `${text.reportTitle} - ${site}`,
-        message:
-          `${text.siteLabel}\uff1a${site}\n` +
-          `${text.problemLabel}\uff1a${issue}\n` +
-          `${text.timeLabel}\uff1a${sydneyTime}`,
-        priority: 5,
-        tags: ["rotating_light", "wrench"]
-      })
-    });
+    return "";
   }
+
+  function addEvent(element, eventName, handler) {
+    if (element.addEventListener) {
+      element.addEventListener(eventName, handler, false);
+    } else if (element.attachEvent) {
+      element.attachEvent("on" + eventName, handler);
+    }
+  }
+
+  function pad(value) {
+    return value < 10 ? "0" + value : String(value);
+  }
+
+  toggleProblemSection();
 })();
