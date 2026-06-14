@@ -37,18 +37,30 @@
           <span id="site-lock" class="lock-label" hidden>二维码已识别</span>
         </div>
 
-        <label for="problem">问题描述</label>
-        <textarea
-          id="problem"
-          name="problem"
-          maxlength="500"
-          rows="6"
-          placeholder="请描述设备故障、异常现象或需要协助的内容"
-          required
-        ></textarea>
-        <div class="field-meta">
-          <span>请尽量描述清楚，便于维保人员快速处理</span>
-          <span id="character-count">0 / 500</span>
+        <div class="description-toggle">
+          <div>
+            <span class="toggle-title">添加问题描述</span>
+            <span class="toggle-hint">选填，不填写也可以快速报修</span>
+          </div>
+          <label class="switch" for="description-enabled">
+            <input id="description-enabled" type="checkbox">
+            <span class="switch-slider"></span>
+          </label>
+        </div>
+
+        <div id="problem-section" class="problem-section" hidden>
+          <label for="problem">问题描述</label>
+          <textarea
+            id="problem"
+            name="problem"
+            maxlength="500"
+            rows="6"
+            placeholder="请描述设备故障、异常现象或需要协助的内容"
+          ></textarea>
+          <div class="field-meta">
+            <span>请尽量描述清楚，便于维保人员快速处理</span>
+            <span id="character-count">0 / 500</span>
+          </div>
         </div>
 
         <button id="submit-button" type="submit">
@@ -63,7 +75,7 @@
     <footer>WINIT 万邑通 · 站点维保呼叫系统</footer>
   </main>
 
-  <script src="config.js?v=20260615-1"></script>
-  <script src="app.js?v=20260615-1" defer></script>
+  <script src="config.js?v=20260615-2"></script>
+  <script src="app.js?v=20260615-2" defer></script>
 </body>
 </html>

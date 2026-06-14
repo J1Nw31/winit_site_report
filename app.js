@@ -4,6 +4,8 @@
   const form = document.querySelector("#report-form");
   const siteInput = document.querySelector("#site");
   const siteLock = document.querySelector("#site-lock");
+  const descriptionEnabled = document.querySelector("#description-enabled");
+  const problemSection = document.querySelector("#problem-section");
   const problemInput = document.querySelector("#problem");
   const characterCount = document.querySelector("#character-count");
   const submitButton = document.querySelector("#submit-button");
@@ -13,7 +15,6 @@
   const text = {
     title: "\u7ad9\u70b9\u62a5\u4fee",
     invalidSite: "\u8bf7\u8f93\u5165\u6709\u6548\u7ad9\u70b9\u53f7\uff0c\u4f8b\u5982 LS01\u3002",
-    shortProblem: "\u8bf7\u81f3\u5c11\u8f93\u5165 3 \u4e2a\u5b57\u7684\u95ee\u9898\u63cf\u8ff0\u3002",
     genericFailure: "\u53d1\u9001\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002",
     success: "\u62a5\u4fee\u4fe1\u606f\u5df2\u53d1\u9001\uff0c\u7ef4\u4fdd\u4eba\u5458\u5df2\u6536\u5230\u901a\u77e5\u3002",
     networkFailure: "\u53d1\u9001\u5931\u8d25\uff0c\u8bf7\u68c0\u67e5\u7f51\u7edc\u540e\u91cd\u8bd5\u3002",
@@ -24,6 +25,7 @@
     reportTitle: "\u7ad9\u70b9\u62a5\u4fee",
     siteLabel: "\u7ad9\u70b9",
     problemLabel: "\u95ee\u9898",
+    noProblem: "\u672a\u586b\u5199\uff0c\u73b0\u573a\u8bf7\u6c42\u7ef4\u4fdd",
     timeLabel: "\u65f6\u95f4"
   };
 
@@ -47,6 +49,16 @@
     characterCount.textContent = `${problemInput.value.length} / 500`;
   });
 
+  descriptionEnabled.addEventListener("change", () => {
+    problemSection.hidden = !descriptionEnabled.checked;
+    if (descriptionEnabled.checked) {
+      problemInput.focus();
+    } else {
+      problemInput.value = "";
+      characterCount.textContent = "0 / 500";
+    }
+  });
+
   siteInput.addEventListener("input", () => {
     siteInput.value = siteInput.value.toUpperCase().replace(/\s+/g, "");
   });
@@ -61,12 +73,6 @@
     if (!sitePattern.test(site)) {
       showStatus(text.invalidSite, "error");
       siteInput.focus();
-      return;
-    }
-
-    if (problem.length < 3) {
-      showStatus(text.shortProblem, "error");
-      problemInput.focus();
       return;
     }
 
@@ -136,6 +142,7 @@
     const topic = String(config.ntfyTopic || "").trim();
     if (!topic) throw new Error(text.noService);
 
+    const issue = problem || text.noProblem;
     const sydneyTime = new Intl.DateTimeFormat("zh-CN", {
       timeZone: "Australia/Sydney",
       dateStyle: "medium",
@@ -150,7 +157,7 @@
         title: `${text.reportTitle} - ${site}`,
         message:
           `${text.siteLabel}\uff1a${site}\n` +
-          `${text.problemLabel}\uff1a${problem}\n` +
+          `${text.problemLabel}\uff1a${issue}\n` +
           `${text.timeLabel}\uff1a${sydneyTime}`,
         priority: 5,
         tags: ["rotating_light", "wrench"]

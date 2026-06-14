@@ -12,8 +12,8 @@ export async function onRequestPost(context) {
       return json({ error: "站点号格式不正确。" }, 400);
     }
 
-    if (problem.length < 3 || problem.length > 500) {
-      return json({ error: "问题描述长度必须为 3 到 500 个字符。" }, 400);
+    if (problem.length > 500) {
+      return json({ error: "问题描述不能超过 500 个字符。" }, 400);
     }
 
     const ip = context.request.headers.get("CF-Connecting-IP") || "unknown";
@@ -39,10 +39,11 @@ export async function onRequestPost(context) {
       timeStyle: "medium"
     }).format(new Date());
 
+    const issue = problem || "未填写，现场请求维保";
     const payload = {
       topic,
       title: `站点报修 - ${site}`,
-      message: `站点：${site}\n问题：${problem}\n时间：${sydneyTime}`,
+      message: `站点：${site}\n问题：${issue}\n时间：${sydneyTime}`,
       priority: 5,
       tags: ["rotating_light", "wrench"]
     };
