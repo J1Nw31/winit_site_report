@@ -1,0 +1,6 @@
+name = "winit-site-report"
+compatibility_date = "2026-06-14"
+pages_build_output_dir = "."
+
+[vars]
+NTFY_SERVER = "https://ntfy.sh"

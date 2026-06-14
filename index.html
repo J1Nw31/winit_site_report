@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#073d72">
+  <title>WINIT 站点报修</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="page-shell">
+    <header class="brand-header">
+      <div class="brand-row">
+        <span class="brand-en">WINIT</span>
+        <span class="brand-cn">万邑通</span>
+      </div>
+      <p>智能连接 · 高效响应</p>
+    </header>
+
+    <section class="report-card" aria-labelledby="page-title">
+      <div class="site-badge" aria-hidden="true">!</div>
+      <p class="eyebrow">维保服务</p>
+      <h1 id="page-title">站点问题报修</h1>
+
+      <form id="report-form" novalidate>
+        <label for="site">站点</label>
+        <div class="site-field">
+          <input
+            id="site"
+            name="site"
+            type="text"
+            maxlength="12"
+            autocomplete="off"
+            placeholder="例如 LS01"
+            required
+          >
+          <span id="site-lock" class="lock-label" hidden>二维码已识别</span>
+        </div>
+
+        <label for="problem">问题描述</label>
+        <textarea
+          id="problem"
+          name="problem"
+          maxlength="500"
+          rows="6"
+          placeholder="请描述设备故障、异常现象或需要协助的内容"
+          required
+        ></textarea>
+        <div class="field-meta">
+          <span>请尽量描述清楚，便于维保人员快速处理</span>
+          <span id="character-count">0 / 500</span>
+        </div>
+
+        <button id="submit-button" type="submit">
+          <span class="button-icon">!</span>
+          <span id="button-text">发送报修</span>
+        </button>
+      </form>
+
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+    </section>
+
+    <footer>WINIT 万邑通 · 站点维保呼叫系统</footer>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
