@@ -1,7 +1,7 @@
 param(
-    [Parameter(Mandatory = $true)]
-    [ValidatePattern('^[A-Za-z]{2,6}\d{2,4}$')]
-    [string[]]$Site
+    [string[]]$Site,
+    [string]$SiteText = "",
+    [switch]$OpenFolder
 )
 
 Set-StrictMode -Version 2.0
@@ -11,8 +11,27 @@ $baseUrl = "https://j1nw31.github.io/winit_site_report/"
 $outputDirectory = Join-Path $PSScriptRoot "qr"
 New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
 
-foreach ($siteCode in $Site) {
-    $normalizedSite = $siteCode.ToUpperInvariant()
+$siteCodes = @()
+$siteCodes += $Site
+if (-not [string]::IsNullOrWhiteSpace($SiteText)) {
+    $siteCodes += $SiteText -split '[,;\s]+'
+}
+$siteCodes = @(
+    $siteCodes |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+        ForEach-Object { $_.Trim().ToUpperInvariant() } |
+        Select-Object -Unique
+)
+
+if ($siteCodes.Count -eq 0) {
+    throw "Enter at least one site code."
+}
+
+foreach ($normalizedSite in $siteCodes) {
+    if ($normalizedSite -notmatch '^[A-Z]{2,6}\d{2,4}$') {
+        throw "Invalid site code '$normalizedSite'. Example: LS01"
+    }
+
     $reportUrl = "$baseUrl?site=$normalizedSite"
     $qrUrl = "https://quickchart.io/qr?text=" +
         [Uri]::EscapeDataString($reportUrl) +
@@ -27,4 +46,8 @@ foreach ($siteCode in $Site) {
 
     Write-Host "$normalizedSite -> $outputPath" -ForegroundColor Green
     Write-Host "URL: $reportUrl"
+}
+
+if ($OpenFolder) {
+    Start-Process explorer.exe -ArgumentList "`"$outputDirectory`""
 }
