@@ -1,5 +1,11 @@
 # WINIT 站点二维码报修网站
 
+当前网站：
+
+```text
+https://j1nw31.github.io/winit_site_report/
+```
+
 二维码链接格式：
 
 ```text
@@ -39,6 +45,13 @@ https://你的域名/?site=LS03
 ```
 
 站点格式支持 2-6 个英文字母加 2-4 位数字。
+
+项目根目录的 `Generate-Site-QR.ps1` 可以批量生成二维码：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass `
+  -File .\Generate-Site-QR.ps1 -Site LS01,LS02,LS03
+```
 
 ## GitHub Pages 快速部署
 
