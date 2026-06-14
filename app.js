@@ -30,7 +30,7 @@
   };
 
   var sitePattern = /^[A-Z]{2,6}\d{2,4}$/;
-  var querySite = getQueryParameter("site");
+  var querySite = detectSiteCode();
   var cooldownRemaining = 0;
   var cooldownTimer = null;
   var sending = false;
@@ -236,6 +236,27 @@
       }
     }
     return "";
+  }
+
+  function detectSiteCode() {
+    var site = getQueryParameter("site");
+    var match;
+
+    if (site) {
+      return site;
+    }
+
+    if (window.location.hash) {
+      match = window.location.hash.toUpperCase().match(/[A-Z]{2,6}\d{2,4}/);
+      if (match) {
+        return match[0];
+      }
+    }
+
+    match = window.location.pathname.toUpperCase().match(
+      /\/([A-Z]{2,6}\d{2,4})\/?$/
+    );
+    return match ? match[1] : "";
   }
 
   function addEvent(element, eventName, handler) {

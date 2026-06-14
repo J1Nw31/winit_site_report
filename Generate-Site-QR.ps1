@@ -32,7 +32,7 @@ foreach ($normalizedSite in $siteCodes) {
         throw "Invalid site code '$normalizedSite'. Example: LS01"
     }
 
-    $reportUrl = "$baseUrl?site=$normalizedSite"
+    $reportUrl = "${baseUrl}?site=$normalizedSite"
     $qrUrl = "https://quickchart.io/qr?text=" +
         [Uri]::EscapeDataString($reportUrl) +
         "&size=800&margin=3&dark=073d72&light=ffffff"
