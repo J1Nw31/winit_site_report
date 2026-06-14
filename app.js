@@ -10,6 +10,23 @@
   const buttonText = document.querySelector("#button-text");
   const status = document.querySelector("#status");
 
+  const text = {
+    title: "\u7ad9\u70b9\u62a5\u4fee",
+    invalidSite: "\u8bf7\u8f93\u5165\u6709\u6548\u7ad9\u70b9\u53f7\uff0c\u4f8b\u5982 LS01\u3002",
+    shortProblem: "\u8bf7\u81f3\u5c11\u8f93\u5165 3 \u4e2a\u5b57\u7684\u95ee\u9898\u63cf\u8ff0\u3002",
+    genericFailure: "\u53d1\u9001\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002",
+    success: "\u62a5\u4fee\u4fe1\u606f\u5df2\u53d1\u9001\uff0c\u7ef4\u4fdd\u4eba\u5458\u5df2\u6536\u5230\u901a\u77e5\u3002",
+    networkFailure: "\u53d1\u9001\u5931\u8d25\uff0c\u8bf7\u68c0\u67e5\u7f51\u7edc\u540e\u91cd\u8bd5\u3002",
+    sending: "\u6b63\u5728\u53d1\u9001...",
+    send: "\u53d1\u9001\u62a5\u4fee",
+    cooldownSuffix: " \u79d2\u540e\u53ef\u518d\u6b21\u53d1\u9001",
+    noService: "\u7f51\u7ad9\u5c1a\u672a\u914d\u7f6e\u901a\u77e5\u670d\u52a1\u3002",
+    reportTitle: "\u7ad9\u70b9\u62a5\u4fee",
+    siteLabel: "\u7ad9\u70b9",
+    problemLabel: "\u95ee\u9898",
+    timeLabel: "\u65f6\u95f4"
+  };
+
   const sitePattern = /^[A-Z]{2,6}\d{2,4}$/;
   const querySite = new URLSearchParams(window.location.search)
     .get("site")
@@ -23,7 +40,7 @@
     siteInput.value = querySite;
     siteInput.readOnly = true;
     siteLock.hidden = false;
-    document.title = `${querySite} - WINIT 站点报修`;
+    document.title = `${querySite} - WINIT ${text.title}`;
   }
 
   problemInput.addEventListener("input", () => {
@@ -36,22 +53,19 @@
 
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-
-    if (cooldownRemaining > 0) {
-      return;
-    }
+    if (cooldownRemaining > 0) return;
 
     const site = siteInput.value.trim().toUpperCase();
     const problem = problemInput.value.trim();
 
     if (!sitePattern.test(site)) {
-      showStatus("请输入有效站点号，例如 LS01。", "error");
+      showStatus(text.invalidSite, "error");
       siteInput.focus();
       return;
     }
 
     if (problem.length < 3) {
-      showStatus("请至少输入 3 个字的问题描述。", "error");
+      showStatus(text.shortProblem, "error");
       problemInput.focus();
       return;
     }
@@ -60,25 +74,24 @@
 
     try {
       const response = await sendReport(site, problem);
-
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(result.error || "发送失败，请稍后重试。");
+        throw new Error(result.error || text.genericFailure);
       }
 
       problemInput.value = "";
       characterCount.textContent = "0 / 500";
-      showStatus("报修信息已发送，维保人员已收到通知。", "success");
+      showStatus(text.success, "success");
       startCooldown(20);
     } catch (error) {
       setSending(false);
-      showStatus(error.message || "发送失败，请检查网络后重试。", "error");
+      showStatus(error.message || text.networkFailure, "error");
     }
   });
 
   function setSending(sending) {
     submitButton.disabled = sending;
-    buttonText.textContent = sending ? "正在发送..." : "发送报修";
+    buttonText.textContent = sending ? text.sending : text.send;
   }
 
   function showStatus(message, type) {
@@ -97,7 +110,7 @@
       if (cooldownRemaining <= 0) {
         window.clearInterval(cooldownTimer);
         submitButton.disabled = false;
-        buttonText.textContent = "发送报修";
+        buttonText.textContent = text.send;
         return;
       }
       updateCooldownText();
@@ -105,7 +118,7 @@
   }
 
   function updateCooldownText() {
-    buttonText.textContent = `${cooldownRemaining} 秒后可再次发送`;
+    buttonText.textContent = `${cooldownRemaining}${text.cooldownSuffix}`;
   }
 
   async function sendReport(site, problem) {
@@ -113,9 +126,7 @@
     if (config.mode !== "direct") {
       return fetch("/api/report", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ site, problem })
       });
     }
@@ -123,9 +134,7 @@
     const server = String(config.ntfyServer || "https://ntfy.sh")
       .replace(/\/+$/, "");
     const topic = String(config.ntfyTopic || "").trim();
-    if (!topic) {
-      throw new Error("网站尚未配置通知服务。");
-    }
+    if (!topic) throw new Error(text.noService);
 
     const sydneyTime = new Intl.DateTimeFormat("zh-CN", {
       timeZone: "Australia/Sydney",
@@ -135,13 +144,14 @@
 
     return fetch(`${server}/`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json; charset=utf-8"
-      },
+      headers: { "Content-Type": "application/json; charset=utf-8" },
       body: JSON.stringify({
         topic,
-        title: `站点报修 - ${site}`,
-        message: `站点：${site}\n问题：${problem}\n时间：${sydneyTime}`,
+        title: `${text.reportTitle} - ${site}`,
+        message:
+          `${text.siteLabel}\uff1a${site}\n` +
+          `${text.problemLabel}\uff1a${problem}\n` +
+          `${text.timeLabel}\uff1a${sydneyTime}`,
         priority: 5,
         tags: ["rotating_light", "wrench"]
       })
