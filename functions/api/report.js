@@ -25,43 +25,44 @@ export async function onRequestPost(context) {
       return json({ error: "请求过于频繁，请 20 秒后重试。" }, 429);
     }
 
-    const server = String(context.env.NTFY_SERVER || "https://ntfy.sh")
+    const server = String(
+      context.env.PUSH_SERVER ||
+        context.env.NTFY_SERVER ||
+        "https://hik2.tail6f1a46.ts.net"
+    )
       .replace(/\/+$/, "");
-    const topic = String(context.env.NTFY_TOPIC || "").trim();
+    const topic = String(
+      context.env.PUSH_TOPIC ||
+        context.env.NTFY_TOPIC ||
+        "离线工作站报障"
+    ).trim();
+    const password = String(
+      context.env.PUSH_PASSWORD ||
+        context.env.NTFY_PASSWORD ||
+        ""
+    );
 
     if (!topic) {
       return json({ error: "服务器尚未配置通知服务。" }, 500);
     }
 
-    const sydneyTime = new Intl.DateTimeFormat("zh-CN", {
-      timeZone: "Australia/Sydney",
-      dateStyle: "medium",
-      timeStyle: "medium"
-    }).format(new Date());
-
     const issue = problem || "未填写，现场请求维保";
     const payload = {
+      password,
       topic,
-      title: `站点报修 - ${site}`,
-      message: `站点：${site}\n问题：${issue}\n时间：${sydneyTime}`,
-      priority: 5,
-      tags: ["rotating_light", "wrench"]
+      title: site,
+      message_base64: base64EncodeUtf8(issue)
     };
 
-    const headers = {
-      "Content-Type": "application/json; charset=utf-8"
-    };
-    if (context.env.NTFY_TOKEN) {
-      headers.Authorization = `Bearer ${context.env.NTFY_TOKEN}`;
-    }
-
-    const ntfyResponse = await fetch(`${server}/`, {
+    const pushResponse = await fetch(`${server}/api/external/report`, {
       method: "POST",
-      headers,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8"
+      },
       body: JSON.stringify(payload)
     });
 
-    if (!ntfyResponse.ok) {
+    if (!pushResponse.ok) {
       return json({ error: "通知服务暂时不可用，请稍后重试。" }, 502);
     }
 
@@ -93,4 +94,13 @@ function json(data, status = 200) {
       "Cache-Control": "no-store"
     }
   });
+}
+
+function base64EncodeUtf8(value) {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
 }

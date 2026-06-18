@@ -25,8 +25,7 @@
     reportTitle: "\u7ad9\u70b9\u62a5\u4fee",
     siteLabel: "\u7ad9\u70b9",
     problemLabel: "\u95ee\u9898",
-    noProblem: "\u672a\u586b\u5199\uff0c\u73b0\u573a\u8bf7\u6c42\u7ef4\u4fdd",
-    timeLabel: "\u65f6\u95f4"
+    noProblem: "\u672a\u586b\u5199\uff0c\u73b0\u573a\u8bf7\u6c42\u7ef4\u4fdd"
   };
 
   var sitePattern = /^[A-Z]{2,6}\d{2,4}$/;
@@ -118,10 +117,15 @@
 
   function sendReport(site, problem, callback) {
     var config = window.REPORT_CONFIG || {};
-    var server = String(config.ntfyServer || "https://ntfy.sh")
+    var server = String(
+      config.pushServer ||
+        config.ntfyServer ||
+        "https://hik2.tail6f1a46.ts.net"
+    )
       .replace(/\/+$/, "");
-    var topic = String(config.ntfyTopic || "")
+    var topic = String(config.pushTopic || config.ntfyTopic || "")
       .replace(/^\s+|\s+$/g, "");
+    var password = String(config.pushPassword || config.ntfyPassword || "");
 
     if (!topic) {
       callback(text.noService);
@@ -129,25 +133,22 @@
     }
 
     var issue = problem || text.noProblem;
-    var now = new Date();
-    var timeText =
-      now.getFullYear() + "-" +
-      pad(now.getMonth() + 1) + "-" +
-      pad(now.getDate()) + " " +
-      pad(now.getHours()) + ":" +
-      pad(now.getMinutes()) + ":" +
-      pad(now.getSeconds());
-    var payload = JSON.stringify({
+    var payload = {
+      password: password,
       topic: topic,
-      title: text.reportTitle + " - " + site,
-      message:
-        text.siteLabel + "\uff1a" + site + "\n" +
-        text.problemLabel + "\uff1a" + issue + "\n" +
-        text.timeLabel + "\uff1a" + timeText,
-      priority: 5,
-      tags: ["rotating_light", "wrench"]
-    });
+      title: site,
+      message_base64: base64EncodeUtf8(issue)
+    };
 
+    if (config.mode === "server") {
+      sendViaSiteApi(site, problem, callback);
+      return;
+    }
+
+    publishToPushCenter(server, payload, callback);
+  }
+
+  function publishToPushCenter(server, payload, callback) {
     var request = createRequest();
     if (!request) {
       callback(text.networkFailure);
@@ -169,15 +170,52 @@
     };
 
     try {
-      request.open("POST", server + "/", true);
+      request.open("POST", server + "/api/external/report", true);
       request.setRequestHeader(
         "Content-Type",
         "application/json; charset=utf-8"
       );
-      request.send(payload);
+      request.send(JSON.stringify(payload));
     } catch (error) {
       callback(text.networkFailure);
     }
+  }
+
+  function sendViaSiteApi(site, problem, callback) {
+    var request = createRequest();
+    if (!request) {
+      callback(text.networkFailure);
+      return;
+    }
+
+    request.onreadystatechange = function () {
+      if (request.readyState !== 4) {
+        return;
+      }
+      if (request.status >= 200 && request.status < 300) {
+        callback(null);
+      } else {
+        callback(text.genericFailure);
+      }
+    };
+    request.onerror = function () {
+      callback(text.networkFailure);
+    };
+
+    try {
+      request.open("POST", "/api/report", true);
+      request.setRequestHeader(
+        "Content-Type",
+        "application/json; charset=utf-8"
+      );
+      request.send(JSON.stringify({ site: site, problem: problem }));
+    } catch (error) {
+      callback(text.networkFailure);
+    }
+  }
+
+  function base64EncodeUtf8(value) {
+    return window.btoa(unescape(encodeURIComponent(value)));
   }
 
   function createRequest() {
@@ -265,10 +303,6 @@
     } else if (element.attachEvent) {
       element.attachEvent("on" + eventName, handler);
     }
-  }
-
-  function pad(value) {
-    return value < 10 ? "0" + value : String(value);
   }
 
   toggleProblemSection();

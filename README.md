@@ -12,13 +12,13 @@ https://j1nw31.github.io/winit_site_report/
 https://你的域名/?site=LS01
 ```
 
-扫码后页面会锁定并显示 `LS01`。用户填写问题描述后，服务端通过
-ntfy 发送：
+扫码后页面会锁定并显示 `LS01`。用户填写问题描述后，通过新的信息平台发送：
 
 ```text
-站点：LS01
-问题：用户填写的描述
-时间：悉尼时间
+平台：https://hik2.tail6f1a46.ts.net/
+频道：离线工作站报障
+标题：LS01
+内容：用户填写的问题描述
 ```
 
 ## Cloudflare Pages 部署
@@ -30,11 +30,20 @@ ntfy 发送：
 5. 在项目 Settings > Variables and Secrets 添加：
 
 ```text
-NTFY_TOPIC=winit-help-9f4c72a81d6e3b50c7a2
-NTFY_TOKEN=
+PUSH_SERVER=https://hik2.tail6f1a46.ts.net
+PUSH_TOPIC=离线工作站报障
+PUSH_PASSWORD=winit777
 ```
 
-`NTFY_TOKEN` 仅在 ntfy 服务器要求认证时填写。
+当前使用的信息平台配置为：
+
+```text
+PUSH_SERVER=https://hik2.tail6f1a46.ts.net
+PUSH_TOPIC=离线工作站报障
+PUSH_PASSWORD=winit777
+```
+
+当前报修网页调用 Push Center 的 `/api/external/report` 接口；旧二维码仍然沿用原来的 `?site=站点编号` 格式。
 
 部署后，为每个站点制作不同二维码：
 
@@ -55,11 +64,13 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass `
 
 二维码保存在本项目的 `qr` 目录。
 
+现有站点二维码仍然沿用原来的 `?site=站点编号` 格式，不需要因为更换信息平台而重新打印。
+
 ## GitHub Pages 快速部署
 
-`config.js` 的 `mode` 设置为 `direct` 时，静态网页会直接向 ntfy
-发送消息，可部署到 GitHub Pages。此方式会在浏览器源码中暴露 Topic，
-应使用难以猜测的随机 Topic。
+`config.js` 的 `mode` 设置为 `direct` 时，静态网页会直接向信息平台
+发送消息，可部署到 GitHub Pages。此方式会在浏览器源码中暴露频道和密码，
+仅适合内网或可接受此风险的场景。
 
 Cloudflare Pages 部署时可将 `mode` 改为 `server`，由
-`functions/api/report.js` 隐藏 Topic 并执行服务端验证。
+`functions/api/report.js` 隐藏频道和密码并执行服务端验证。
