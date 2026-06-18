@@ -31,11 +31,6 @@ export async function onRequestPost(context) {
         "https://hik2.tail6f1a46.ts.net"
     )
       .replace(/\/+$/, "");
-    const topic = String(
-      context.env.PUSH_TOPIC ||
-        context.env.NTFY_TOPIC ||
-        "离线工作站报障"
-    ).trim();
     const password = String(
       context.env.PUSH_PASSWORD ||
         context.env.NTFY_PASSWORD ||
@@ -49,7 +44,6 @@ export async function onRequestPost(context) {
     const issue = problem || "未填写，现场请求维保";
     const payload = {
       password,
-      topic,
       title: site,
       message_base64: base64EncodeUtf8(issue)
     };

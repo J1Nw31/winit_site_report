@@ -123,19 +123,11 @@
         "https://hik2.tail6f1a46.ts.net"
     )
       .replace(/\/+$/, "");
-    var topic = String(config.pushTopic || config.ntfyTopic || "")
-      .replace(/^\s+|\s+$/g, "");
     var password = String(config.pushPassword || config.ntfyPassword || "");
-
-    if (!topic) {
-      callback(text.noService);
-      return;
-    }
 
     var issue = problem || text.noProblem;
     var payload = {
       password: password,
-      topic: topic,
       title: site,
       message_base64: base64EncodeUtf8(issue)
     };
