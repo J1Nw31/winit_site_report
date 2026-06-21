@@ -115,7 +115,7 @@ label {
   font-weight: 700;
 }
 
-input,
+input[type="text"],
 textarea {
   width: 100%;
   border: 1px solid #cbd8e3;
@@ -127,7 +127,7 @@ textarea {
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
-input {
+input[type="text"] {
   height: 54px;
   padding: 0 16px;
   text-transform: uppercase;
@@ -142,13 +142,13 @@ textarea {
   line-height: 1.6;
 }
 
-input:focus,
+input[type="text"]:focus,
 textarea:focus {
   border-color: var(--blue);
   box-shadow: 0 0 0 4px rgba(8, 127, 196, 0.12);
 }
 
-input:read-only {
+input[type="text"]:read-only {
   color: var(--navy);
   background: #edf6fb;
 }
