@@ -8,6 +8,7 @@
   var problemSection = document.getElementById("problem-section");
   var problemInput = document.getElementById("problem");
   var characterCount = document.getElementById("character-count");
+  var quickIssueInputs = document.getElementsByName("quickIssue");
   var submitButton = document.getElementById("submit-button");
   var buttonText = document.getElementById("button-text");
   var status = document.getElementById("status");
@@ -53,6 +54,7 @@
   addEvent(descriptionEnabled, "click", function () {
     window.setTimeout(toggleProblemSection, 0);
   });
+  addQuickIssueEvents();
 
   addEvent(siteInput, "input", function () {
     siteInput.value = siteInput.value.toUpperCase().replace(/\s+/g, "");
@@ -80,6 +82,38 @@
     }
   }
 
+  function addQuickIssueEvents() {
+    var index;
+    for (index = 0; index < quickIssueInputs.length; index += 1) {
+      addEvent(quickIssueInputs[index], "change", function () {
+        if (this.value === "\u5176\u4ed6") {
+          descriptionEnabled.checked = true;
+          toggleProblemSection();
+        }
+      });
+    }
+  }
+
+  function buildProblemMessage() {
+    var quickIssue = getSelectedQuickIssue();
+    var detail = problemInput.value.replace(/^\s+|\s+$/g, "");
+
+    if (quickIssue && detail) {
+      return quickIssue + "\uff1a" + detail;
+    }
+    return quickIssue || detail;
+  }
+
+  function getSelectedQuickIssue() {
+    var index;
+    for (index = 0; index < quickIssueInputs.length; index += 1) {
+      if (quickIssueInputs[index].checked) {
+        return quickIssueInputs[index].value;
+      }
+    }
+    return "";
+  }
+
   function submitReport(event) {
     if (event && event.preventDefault) {
       event.preventDefault();
@@ -90,7 +124,7 @@
     }
 
     var site = siteInput.value.replace(/^\s+|\s+$/g, "").toUpperCase();
-    var problem = problemInput.value.replace(/^\s+|\s+$/g, "");
+    var problem = buildProblemMessage();
 
     if (!sitePattern.test(site)) {
       showStatus(text.invalidSite, "error");

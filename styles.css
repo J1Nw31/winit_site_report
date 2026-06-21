@@ -183,6 +183,64 @@ input:read-only {
   max-width: 72%;
 }
 
+.quick-issues {
+  margin: 22px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.quick-issues legend {
+  margin: 0 0 10px;
+  color: #385069;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.quick-issue-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.quick-issue {
+  position: relative;
+  display: flex;
+  min-height: 48px;
+  margin: 0;
+  align-items: stretch;
+  color: #385069;
+  font-size: 14px;
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+}
+
+.quick-issue input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.quick-issue span {
+  display: grid;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  place-items: center;
+  background: #f8fbfd;
+  border: 1px solid #cbd8e3;
+  border-radius: 14px;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.quick-issue input:checked + span {
+  color: var(--navy);
+  background: #edf6fb;
+  border-color: var(--blue);
+  box-shadow: 0 0 0 4px rgba(8, 127, 196, 0.12);
+}
+
 .description-toggle {
   display: flex;
   margin-top: 22px;
