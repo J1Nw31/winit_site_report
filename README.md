@@ -3,7 +3,7 @@
 当前网站：
 
 ```text
-https://j1nw31.github.io/winit_site_report/
+https://hik2.tail6f1a46.ts.net/web-site-report/
 ```
 
 二维码链接格式：
