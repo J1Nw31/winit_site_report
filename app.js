@@ -802,7 +802,7 @@
     var title = String(message && message.title ? message.title : "")
       .replace(/^\s+|\s+$/g, "")
       .toUpperCase();
-    return title === site;
+    return !title || title === site;
   }
 
   function isFreshChatMessage(message) {
