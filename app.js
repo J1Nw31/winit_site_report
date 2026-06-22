@@ -47,6 +47,8 @@
   var cooldownRemaining = 0;
   var cooldownTimer = null;
   var sending = false;
+  var chatMessageTtlMs = 60 * 60 * 1000;
+  var chatCleanupTimer = null;
   var chatSource = null;
   var chatToken = "";
   var activeChatSite = "";
@@ -398,6 +400,7 @@
     activeChatTopic = topic;
     setChatState(text.chatConnecting);
     renderChatMessages([]);
+    startChatCleanupTimer();
     loadChatHistory(site, topic);
     subscribeToChat(site, topic);
   }
@@ -479,7 +482,7 @@
         } catch (parseError) {
           return;
         }
-        if (isSiteMessage(message, site)) {
+        if (isSiteMessage(message, site) && isFreshChatMessage(message)) {
           prependChatMessage(message);
           markNewReply();
           setChatState(text.chatOnline);
@@ -549,7 +552,7 @@
     var filtered = [];
     var index;
     for (index = 0; index < messages.length; index += 1) {
-      if (isSiteMessage(messages[index], site)) {
+      if (isSiteMessage(messages[index], site) && isFreshChatMessage(messages[index])) {
         filtered.push(messages[index]);
       }
     }
@@ -561,6 +564,14 @@
       .replace(/^\s+|\s+$/g, "")
       .toUpperCase();
     return title === site;
+  }
+
+  function isFreshChatMessage(message) {
+    var timestamp = message && message.timestamp ? new Date(message.timestamp).getTime() : Date.now();
+    if (isNaN(timestamp)) {
+      return true;
+    }
+    return Date.now() - timestamp < chatMessageTtlMs;
   }
 
   function renderChatMessages(messages) {
@@ -596,6 +607,7 @@
     if (message.id) {
       article.setAttribute("data-id", message.id);
     }
+    article.setAttribute("data-timestamp", message.timestamp || new Date().toISOString());
     article.innerHTML =
       '<div class="chat-message-body">' +
       escapeHtml(message.message || "") +
@@ -610,6 +622,7 @@
     activeChatSite = "";
     activeChatTopic = "";
     closeChatSource();
+    stopChatCleanupTimer();
     clearReplyNotice();
     setChatState(stateText);
     if (chatList) {
@@ -621,6 +634,41 @@
     if (chatSource) {
       chatSource.close();
       chatSource = null;
+    }
+  }
+
+  function startChatCleanupTimer() {
+    stopChatCleanupTimer();
+    chatCleanupTimer = window.setInterval(cleanupExpiredChatMessages, 60 * 1000);
+  }
+
+  function stopChatCleanupTimer() {
+    if (chatCleanupTimer) {
+      window.clearInterval(chatCleanupTimer);
+      chatCleanupTimer = null;
+    }
+  }
+
+  function cleanupExpiredChatMessages() {
+    var messages;
+    var index;
+    var removed = false;
+
+    if (!chatList) {
+      return;
+    }
+
+    messages = chatList.querySelectorAll(".chat-message");
+    for (index = 0; index < messages.length; index += 1) {
+      if (!isFreshChatMessage({ timestamp: messages[index].getAttribute("data-timestamp") })) {
+        messages[index].parentNode.removeChild(messages[index]);
+        removed = true;
+      }
+    }
+
+    if (removed && !chatList.querySelector(".chat-message")) {
+      chatList.innerHTML = '<p class="chat-empty">' + text.chatNoReply + "</p>";
+      clearReplyNotice();
     }
   }
 
@@ -711,7 +759,10 @@
     return date.toLocaleString();
   }
 
-  addEvent(window, "beforeunload", closeChatSource);
+  addEvent(window, "beforeunload", function () {
+    closeChatSource();
+    stopChatCleanupTimer();
+  });
   toggleProblemSection();
   initChat();
 })();
