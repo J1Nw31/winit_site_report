@@ -176,8 +176,8 @@
         return;
       }
 
-      problemInput.value = "";
-      characterCount.innerHTML = "0 / 500";
+      descriptionEnabled.checked = false;
+      toggleProblemSection();
       showStatus(text.success, "success");
       startCooldown(20);
     });
