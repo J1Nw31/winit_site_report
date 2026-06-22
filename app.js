@@ -12,6 +12,7 @@
   var submitButton = document.getElementById("submit-button");
   var buttonText = document.getElementById("button-text");
   var status = document.getElementById("status");
+  var replyHint = document.getElementById("reply-hint");
   var chatPanel = document.querySelector(".chat-panel");
   var chatState = document.getElementById("chat-state");
   var chatNewBadge = document.getElementById("chat-new-badge");
@@ -80,6 +81,9 @@
   });
 
   addEvent(form, "submit", submitReport);
+  if (replyHint) {
+    addEvent(replyHint, "click", scrollToChat);
+  }
   if (chatPanel) {
     addEvent(chatPanel, "click", clearReplyNotice);
     addEvent(chatPanel, "touchstart", clearReplyNotice);
@@ -627,6 +631,9 @@
   }
 
   function markNewReply() {
+    if (replyHint) {
+      replyHint.classList.add("has-new-reply");
+    }
     if (chatPanel) {
       chatPanel.classList.add("has-new-reply");
     }
@@ -640,6 +647,9 @@
   }
 
   function clearReplyNotice() {
+    if (replyHint) {
+      replyHint.classList.remove("has-new-reply");
+    }
     if (chatPanel) {
       chatPanel.classList.remove("has-new-reply");
     }
@@ -647,6 +657,18 @@
       chatNewBadge.hidden = true;
     }
     document.title = normalTitle;
+  }
+
+  function scrollToChat() {
+    if (!chatPanel) {
+      return;
+    }
+    if (chatPanel.scrollIntoView) {
+      chatPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      window.location.hash = "chat-title";
+    }
+    clearReplyNotice();
   }
 
   function getServer(config) {

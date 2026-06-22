@@ -378,6 +378,56 @@ button:disabled {
   color: var(--red);
 }
 
+.reply-hint {
+  display: flex;
+  width: 100%;
+  min-height: 42px;
+  margin-top: 10px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--blue);
+  background: transparent;
+  border: 1px solid #d7e8f2;
+  border-radius: 14px;
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.reply-hint:active {
+  transform: scale(0.99);
+}
+
+.reply-hint-arrow {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  color: white;
+  background: var(--blue);
+  border-radius: 50%;
+  font-size: 15px;
+  line-height: 1;
+}
+
+.reply-hint.has-new-reply {
+  color: white;
+  background: linear-gradient(135deg, var(--red-light), var(--red));
+  border-color: transparent;
+  box-shadow: 0 10px 22px rgba(217, 31, 55, 0.2);
+}
+
+.reply-hint.has-new-reply .reply-hint-arrow {
+  background: rgba(255, 255, 255, 0.22);
+  animation: arrowBounce 0.82s ease-in-out infinite;
+}
+
+@keyframes arrowBounce {
+  0%, 100% { transform: translateY(-2px); }
+  50% { transform: translateY(4px); }
+}
+
 .chat-panel {
   margin-top: 24px;
   padding-top: 20px;
