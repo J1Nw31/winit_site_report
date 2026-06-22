@@ -12,7 +12,9 @@
   var submitButton = document.getElementById("submit-button");
   var buttonText = document.getElementById("button-text");
   var status = document.getElementById("status");
+  var chatPanel = document.querySelector(".chat-panel");
   var chatState = document.getElementById("chat-state");
+  var chatNewBadge = document.getElementById("chat-new-badge");
   var chatList = document.getElementById("chat-list");
 
   var text = {
@@ -35,7 +37,8 @@
     chatNoTopic: "\u6682\u65e0\u5ba2\u670d\u9891\u9053",
     chatOffline: "\u5ba2\u670d\u6682\u4e0d\u53ef\u7528",
     chatEmpty: "\u5ba2\u670d\u56de\u590d\u4f1a\u663e\u793a\u5728\u8fd9\u91cc\u3002",
-    chatNoReply: "\u5f53\u524d\u7ad9\u70b9\u6682\u65e0\u5ba2\u670d\u56de\u590d\u3002"
+    chatNoReply: "\u5f53\u524d\u7ad9\u70b9\u6682\u65e0\u5ba2\u670d\u56de\u590d\u3002",
+    newReplyTitle: "\u6709\u65b0\u56de\u590d"
   };
 
   var sitePattern = /^[A-Z]{2,6}\d{2,4}$/;
@@ -47,6 +50,7 @@
   var chatToken = "";
   var activeChatSite = "";
   var activeChatTopic = "";
+  var normalTitle = document.title;
 
   if (querySite) {
     querySite = querySite.replace(/^\s+|\s+$/g, "").toUpperCase();
@@ -57,6 +61,7 @@
     siteInput.readOnly = true;
     siteLock.style.display = "inline";
     document.title = querySite + " - WINIT " + text.title;
+    normalTitle = document.title;
   }
 
   addEvent(problemInput, "input", function () {
@@ -75,6 +80,11 @@
   });
 
   addEvent(form, "submit", submitReport);
+  if (chatPanel) {
+    addEvent(chatPanel, "click", clearReplyNotice);
+    addEvent(chatPanel, "touchstart", clearReplyNotice);
+  }
+  addEvent(window, "focus", clearReplyNotice);
   addEvent(submitButton, "click", function (event) {
     if (event && event.preventDefault) {
       event.preventDefault();
@@ -459,6 +469,7 @@
         }
         if (isSiteMessage(message, site)) {
           prependChatMessage(message);
+          markNewReply();
           setChatState(text.chatOnline);
         }
       });
@@ -587,6 +598,7 @@
     activeChatSite = "";
     activeChatTopic = "";
     closeChatSource();
+    clearReplyNotice();
     setChatState(stateText);
     if (chatList) {
       chatList.innerHTML = '<p class="chat-empty">' + text.chatEmpty + "</p>";
@@ -604,6 +616,29 @@
     if (chatState) {
       chatState.innerHTML = value;
     }
+  }
+
+  function markNewReply() {
+    if (chatPanel) {
+      chatPanel.classList.add("has-new-reply");
+    }
+    if (chatNewBadge) {
+      chatNewBadge.hidden = false;
+    }
+    document.title = text.newReplyTitle + " - " + normalTitle;
+    if (window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate([180, 80, 180]);
+    }
+  }
+
+  function clearReplyNotice() {
+    if (chatPanel) {
+      chatPanel.classList.remove("has-new-reply");
+    }
+    if (chatNewBadge) {
+      chatNewBadge.hidden = true;
+    }
+    document.title = normalTitle;
   }
 
   function getServer(config) {

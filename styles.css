@@ -382,6 +382,23 @@ button:disabled {
   margin-top: 24px;
   padding-top: 20px;
   border-top: 1px solid #e2ebf1;
+  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.chat-panel.has-new-reply {
+  margin-right: -10px;
+  margin-left: -10px;
+  padding: 20px 10px 10px;
+  background: #fff6f3;
+  border-color: #f4a39d;
+  border-radius: 16px;
+  box-shadow: 0 0 0 4px rgba(217, 31, 55, 0.1);
+  animation: replyPulse 1.25s ease-in-out infinite;
+}
+
+@keyframes replyPulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(217, 31, 55, 0.1); }
+  50% { box-shadow: 0 0 0 8px rgba(217, 31, 55, 0.18); }
 }
 
 .chat-header {
@@ -414,6 +431,22 @@ button:disabled {
   border-radius: 999px;
   font-size: 12px;
   font-weight: 800;
+}
+
+.chat-status-row {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 7px;
+}
+
+.chat-new-badge {
+  padding: 5px 9px;
+  color: white;
+  background: var(--red);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .chat-list {

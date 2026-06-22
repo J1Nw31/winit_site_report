@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#073d72">
   <title>WINIT 站点报修</title>
-  <link rel="stylesheet" href="styles.css?v=20260622-1">
+  <link rel="stylesheet" href="styles.css?v=20260622-2">
 </head>
 <body>
   <main class="page-shell">
@@ -99,7 +99,10 @@
             <p class="chat-kicker">ONLINE SERVICE</p>
             <h2 id="chat-title">客服回复</h2>
           </div>
-          <span id="chat-state" class="chat-state">等待站点</span>
+          <div class="chat-status-row">
+            <span id="chat-new-badge" class="chat-new-badge" hidden>新回复</span>
+            <span id="chat-state" class="chat-state">等待站点</span>
+          </div>
         </div>
         <div id="chat-list" class="chat-list" aria-live="polite">
           <p class="chat-empty">客服回复会显示在这里。</p>
@@ -111,6 +114,6 @@
   </main>
 
   <script src="config.js?v=20260622-1"></script>
-  <script src="app.js?v=20260622-1"></script>
+  <script src="app.js?v=20260622-2"></script>
 </body>
 </html>
