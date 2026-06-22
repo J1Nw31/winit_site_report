@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#073d72">
   <title>WINIT 站点报修</title>
-  <link rel="stylesheet" href="styles.css?v=20260622-2">
+  <link rel="stylesheet" href="styles.css?v=20260622-3">
 </head>
 <body>
   <main class="page-shell">
@@ -37,28 +37,6 @@
           <span id="site-lock" class="lock-label" hidden>二维码已识别</span>
         </div>
 
-        <fieldset class="quick-issues" aria-labelledby="quick-issues-title">
-          <legend id="quick-issues-title">常见问题</legend>
-          <div class="quick-issue-grid">
-            <label class="quick-issue">
-              <input type="radio" name="quickIssue" value="箱子不来">
-              <span>箱子不来</span>
-            </label>
-            <label class="quick-issue">
-              <input type="radio" name="quickIssue" value="小车不进站">
-              <span>小车不进站</span>
-            </label>
-            <label class="quick-issue">
-              <input type="radio" name="quickIssue" value="小车进站不放箱">
-              <span>小车进站不放箱</span>
-            </label>
-            <label class="quick-issue">
-              <input type="radio" name="quickIssue" value="其他">
-              <span>其他</span>
-            </label>
-          </div>
-        </fieldset>
-
         <div class="description-toggle">
           <div>
             <span class="toggle-title">添加问题描述</span>
@@ -71,6 +49,28 @@
         </div>
 
         <div id="problem-section" class="problem-section" hidden>
+          <fieldset class="quick-issues" aria-labelledby="quick-issues-title">
+            <legend id="quick-issues-title">常见问题</legend>
+            <div class="quick-issue-grid">
+              <label class="quick-issue">
+                <input type="radio" name="quickIssue" value="箱子不来">
+                <span>箱子不来</span>
+              </label>
+              <label class="quick-issue">
+                <input type="radio" name="quickIssue" value="小车不进站">
+                <span>小车不进站</span>
+              </label>
+              <label class="quick-issue">
+                <input type="radio" name="quickIssue" value="小车进站不放箱">
+                <span>小车进站不放箱</span>
+              </label>
+              <label class="quick-issue">
+                <input type="radio" name="quickIssue" value="其他">
+                <span>其他</span>
+              </label>
+            </div>
+          </fieldset>
+
           <label for="problem">问题描述</label>
           <textarea
             id="problem"
@@ -114,6 +114,6 @@
   </main>
 
   <script src="config.js?v=20260622-1"></script>
-  <script src="app.js?v=20260622-2"></script>
+  <script src="app.js?v=20260622-3"></script>
 </body>
 </html>

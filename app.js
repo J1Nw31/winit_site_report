@@ -102,6 +102,7 @@
       problemSection.style.display = "none";
       problemSection.setAttribute("hidden", "hidden");
       problemInput.value = "";
+      clearQuickIssue();
       characterCount.innerHTML = "0 / 500";
     }
   }
@@ -136,6 +137,13 @@
       }
     }
     return "";
+  }
+
+  function clearQuickIssue() {
+    var index;
+    for (index = 0; index < quickIssueInputs.length; index += 1) {
+      quickIssueInputs[index].checked = false;
+    }
   }
 
   function submitReport(event) {
