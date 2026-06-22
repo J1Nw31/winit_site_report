@@ -7,7 +7,7 @@ param(
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = "Stop"
 
-$baseUrl = "https://j1nw31.github.io/winit_site_report/"
+$baseUrl = "https://hik2.tail6f1a46.ts.net/web-site-report/"
 $outputDirectory = Join-Path $PSScriptRoot "qr"
 New-Item -ItemType Directory -Path $outputDirectory -Force | Out-Null
 
