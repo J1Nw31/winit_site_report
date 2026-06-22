@@ -12,6 +12,8 @@
   var submitButton = document.getElementById("submit-button");
   var buttonText = document.getElementById("button-text");
   var status = document.getElementById("status");
+  var chatState = document.getElementById("chat-state");
+  var chatList = document.getElementById("chat-list");
 
   var text = {
     title: "\u7ad9\u70b9\u62a5\u4fee",
@@ -26,7 +28,14 @@
     reportTitle: "\u7ad9\u70b9\u62a5\u4fee",
     siteLabel: "\u7ad9\u70b9",
     problemLabel: "\u95ee\u9898",
-    noProblem: "\u672a\u586b\u5199\uff0c\u73b0\u573a\u8bf7\u6c42\u7ef4\u4fdd"
+    noProblem: "\u672a\u586b\u5199\uff0c\u73b0\u573a\u8bf7\u6c42\u7ef4\u4fdd",
+    chatWaiting: "\u7b49\u5f85\u7ad9\u70b9",
+    chatConnecting: "\u6b63\u5728\u8fde\u63a5",
+    chatOnline: "\u5df2\u8fde\u63a5",
+    chatNoTopic: "\u6682\u65e0\u5ba2\u670d\u9891\u9053",
+    chatOffline: "\u5ba2\u670d\u6682\u4e0d\u53ef\u7528",
+    chatEmpty: "\u5ba2\u670d\u56de\u590d\u4f1a\u663e\u793a\u5728\u8fd9\u91cc\u3002",
+    chatNoReply: "\u5f53\u524d\u7ad9\u70b9\u6682\u65e0\u5ba2\u670d\u56de\u590d\u3002"
   };
 
   var sitePattern = /^[A-Z]{2,6}\d{2,4}$/;
@@ -34,6 +43,10 @@
   var cooldownRemaining = 0;
   var cooldownTimer = null;
   var sending = false;
+  var chatSource = null;
+  var chatToken = "";
+  var activeChatSite = "";
+  var activeChatTopic = "";
 
   if (querySite) {
     querySite = querySite.replace(/^\s+|\s+$/g, "").toUpperCase();
@@ -58,6 +71,7 @@
 
   addEvent(siteInput, "input", function () {
     siteInput.value = siteInput.value.toUpperCase().replace(/\s+/g, "");
+    scheduleChatRefresh();
   });
 
   addEvent(form, "submit", submitReport);
@@ -158,10 +172,12 @@
     )
       .replace(/\/+$/, "");
     var password = String(config.pushPassword || config.ntfyPassword || "");
+    var topic = getTopicForSite(site, config.pushTopicByPrefix, config.pushTopic);
 
     var issue = problem || text.noProblem;
     var payload = {
       password: password,
+      topic: topic,
       title: site,
       message_base64: base64EncodeUtf8(issue)
     };
@@ -331,5 +347,306 @@
     }
   }
 
+  function scheduleChatRefresh() {
+    window.clearTimeout(scheduleChatRefresh.timer);
+    scheduleChatRefresh.timer = window.setTimeout(initChat, 350);
+  }
+
+  function initChat() {
+    var config = window.REPORT_CONFIG || {};
+    var site = siteInput.value.replace(/^\s+|\s+$/g, "").toUpperCase();
+    var topic;
+
+    if (!sitePattern.test(site)) {
+      resetChat(text.chatWaiting);
+      return;
+    }
+
+    topic = getTopicForSite(site, config.receiveTopicByPrefix, config.receiveTopic);
+    if (!topic) {
+      resetChat(text.chatNoTopic);
+      return;
+    }
+
+    if (site === activeChatSite && topic === activeChatTopic && chatSource) {
+      return;
+    }
+
+    activeChatSite = site;
+    activeChatTopic = topic;
+    setChatState(text.chatConnecting);
+    renderChatMessages([]);
+    loadChatHistory(site, topic);
+    subscribeToChat(site, topic);
+  }
+
+  function loadChatHistory(site, topic) {
+    ensureChatToken(function (error, token) {
+      var config = window.REPORT_CONFIG || {};
+      var server = getServer(config);
+      var request;
+
+      if (error) {
+        setChatState(text.chatOffline);
+        return;
+      }
+
+      request = createRequest();
+      if (!request) {
+        setChatState(text.chatOffline);
+        return;
+      }
+
+      request.onreadystatechange = function () {
+        var data;
+        if (request.readyState !== 4 || site !== activeChatSite || topic !== activeChatTopic) {
+          return;
+        }
+        if (request.status >= 200 && request.status < 300) {
+          try {
+            data = JSON.parse(request.responseText || "{}");
+            renderChatMessages(filterSiteMessages(data.history || [], site));
+            setChatState(text.chatOnline);
+          } catch (parseError) {
+            setChatState(text.chatOffline);
+          }
+        } else {
+          setChatState(text.chatOffline);
+        }
+      };
+      request.onerror = function () {
+        setChatState(text.chatOffline);
+      };
+
+      try {
+        request.open(
+          "GET",
+          server + "/history/" + encodeURIComponent(topic) + "?limit=100",
+          true
+        );
+        request.setRequestHeader("Authorization", "Bearer " + token);
+        request.send();
+      } catch (requestError) {
+        setChatState(text.chatOffline);
+      }
+    });
+  }
+
+  function subscribeToChat(site, topic) {
+    var server = getServer(window.REPORT_CONFIG || {});
+
+    closeChatSource();
+    if (!window.EventSource) {
+      return;
+    }
+
+    try {
+      chatSource = new EventSource(server + "/subscribe/" + encodeURIComponent(topic));
+      chatSource.addEventListener("open", function () {
+        if (site === activeChatSite && topic === activeChatTopic) {
+          setChatState(text.chatOnline);
+        }
+      });
+      chatSource.addEventListener("message", function (event) {
+        var message;
+        if (site !== activeChatSite || topic !== activeChatTopic) {
+          return;
+        }
+        try {
+          message = JSON.parse(event.data);
+        } catch (parseError) {
+          return;
+        }
+        if (isSiteMessage(message, site)) {
+          prependChatMessage(message);
+          setChatState(text.chatOnline);
+        }
+      });
+      chatSource.addEventListener("error", function () {
+        if (site === activeChatSite && topic === activeChatTopic) {
+          setChatState(text.chatConnecting);
+        }
+      });
+    } catch (error) {
+      setChatState(text.chatOffline);
+    }
+  }
+
+  function ensureChatToken(callback) {
+    var config = window.REPORT_CONFIG || {};
+    var password = String(config.pushPassword || config.ntfyPassword || "");
+    var request;
+
+    if (chatToken) {
+      callback(null, chatToken);
+      return;
+    }
+    if (!password) {
+      callback(text.noService);
+      return;
+    }
+
+    request = createRequest();
+    if (!request) {
+      callback(text.networkFailure);
+      return;
+    }
+
+    request.onreadystatechange = function () {
+      var data;
+      if (request.readyState !== 4) {
+        return;
+      }
+      if (request.status >= 200 && request.status < 300) {
+        try {
+          data = JSON.parse(request.responseText || "{}");
+          chatToken = data.token || "";
+          callback(chatToken ? null : text.genericFailure, chatToken);
+        } catch (error) {
+          callback(text.genericFailure);
+        }
+      } else {
+        callback(text.genericFailure);
+      }
+    };
+    request.onerror = function () {
+      callback(text.networkFailure);
+    };
+
+    try {
+      request.open("POST", getServer(config) + "/api/auth/login", true);
+      request.setRequestHeader("Content-Type", "application/json; charset=utf-8");
+      request.send(JSON.stringify({ password: password }));
+    } catch (error) {
+      callback(text.networkFailure);
+    }
+  }
+
+  function filterSiteMessages(messages, site) {
+    var filtered = [];
+    var index;
+    for (index = 0; index < messages.length; index += 1) {
+      if (isSiteMessage(messages[index], site)) {
+        filtered.push(messages[index]);
+      }
+    }
+    return filtered;
+  }
+
+  function isSiteMessage(message, site) {
+    var title = String(message && message.title ? message.title : "")
+      .replace(/^\s+|\s+$/g, "")
+      .toUpperCase();
+    return title === site;
+  }
+
+  function renderChatMessages(messages) {
+    var index;
+    if (!chatList) {
+      return;
+    }
+    chatList.innerHTML = "";
+    if (!messages.length) {
+      chatList.innerHTML = '<p class="chat-empty">' + text.chatNoReply + "</p>";
+      return;
+    }
+    for (index = messages.length - 1; index >= 0; index -= 1) {
+      chatList.appendChild(createChatMessage(messages[index]));
+    }
+  }
+
+  function prependChatMessage(message) {
+    var empty = chatList.querySelector(".chat-empty");
+    if (empty) {
+      chatList.innerHTML = "";
+    }
+    if (message.id && chatList.querySelector('[data-id="' + cssEscape(message.id) + '"]')) {
+      return;
+    }
+    chatList.insertBefore(createChatMessage(message), chatList.firstChild);
+  }
+
+  function createChatMessage(message) {
+    var article = document.createElement("article");
+    var meta = "#" + (message.topic || activeChatTopic) + " · " + formatTime(message.timestamp);
+    article.className = "chat-message";
+    if (message.id) {
+      article.setAttribute("data-id", message.id);
+    }
+    article.innerHTML =
+      '<div class="chat-message-body">' +
+      escapeHtml(message.message || "") +
+      "</div>" +
+      '<div class="chat-message-meta">' +
+      escapeHtml(meta) +
+      "</div>";
+    return article;
+  }
+
+  function resetChat(stateText) {
+    activeChatSite = "";
+    activeChatTopic = "";
+    closeChatSource();
+    setChatState(stateText);
+    if (chatList) {
+      chatList.innerHTML = '<p class="chat-empty">' + text.chatEmpty + "</p>";
+    }
+  }
+
+  function closeChatSource() {
+    if (chatSource) {
+      chatSource.close();
+      chatSource = null;
+    }
+  }
+
+  function setChatState(value) {
+    if (chatState) {
+      chatState.innerHTML = value;
+    }
+  }
+
+  function getServer(config) {
+    return String(
+      config.pushServer ||
+        config.ntfyServer ||
+        "https://hik2.tail6f1a46.ts.net"
+    ).replace(/\/+$/, "");
+  }
+
+  function getTopicForSite(site, topicByPrefix, fallback) {
+    var prefix = (site.match(/^[A-Z]+/) || [""])[0];
+    var topics = topicByPrefix || {};
+    return String(topics[prefix] || fallback || "");
+  }
+
+  function escapeHtml(value) {
+    var div = document.createElement("div");
+    div.textContent = value == null ? "" : String(value);
+    return div.innerHTML;
+  }
+
+  function cssEscape(value) {
+    if (window.CSS && window.CSS.escape) {
+      return window.CSS.escape(value);
+    }
+    return String(value).replace(/"/g, '\\"');
+  }
+
+  function formatTime(timestamp) {
+    var date = timestamp ? new Date(timestamp) : new Date();
+    if (window.Intl && window.Intl.DateTimeFormat) {
+      return new Intl.DateTimeFormat("zh-CN", {
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(date);
+    }
+    return date.toLocaleString();
+  }
+
+  addEvent(window, "beforeunload", closeChatSource);
   toggleProblemSection();
+  initChat();
 })();

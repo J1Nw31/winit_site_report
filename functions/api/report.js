@@ -36,6 +36,7 @@ export async function onRequestPost(context) {
         context.env.NTFY_PASSWORD ||
         ""
     );
+    const topic = topicForSite(site, context.env);
 
     if (!topic) {
       return json({ error: "服务器尚未配置通知服务。" }, 500);
@@ -44,6 +45,7 @@ export async function onRequestPost(context) {
     const issue = problem || "未填写，现场请求维保";
     const payload = {
       password,
+      topic,
       title: site,
       message_base64: base64EncodeUtf8(issue)
     };
@@ -97,4 +99,15 @@ function base64EncodeUtf8(value) {
     binary += String.fromCharCode(byte);
   }
   return btoa(binary);
+}
+
+function topicForSite(site, env) {
+  const prefix = (site.match(/^[A-Z]+/) || [""])[0];
+  if (prefix === "DX" || prefix === "XX") {
+    return env.PUSH_CONVEYOR_TOPIC || "输送线人员报障";
+  }
+  if (prefix === "LS") {
+    return env.PUSH_LS_TOPIC || env.PUSH_TOPIC || "离线工作站报障";
+  }
+  return env.PUSH_TOPIC || "";
 }
