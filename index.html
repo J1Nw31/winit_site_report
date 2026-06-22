@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#073d72">
   <title>WINIT 站点报修</title>
-  <link rel="stylesheet" href="styles.css?v=20260622-5">
+  <link rel="stylesheet" href="styles.css?v=20260622-6">
 </head>
 <body>
   <main class="page-shell">
@@ -14,16 +14,24 @@
         <span class="brand-en">WINIT</span>
         <span class="brand-cn">万邑通</span>
       </div>
-      <p>智能连接 · 高效响应</p>
+      <p data-i18n="brandSlogan">智能连接 · 高效响应</p>
+      <label class="language-picker" for="language-select">
+        <span data-i18n="languageLabel">语言</span>
+        <select id="language-select" aria-label="语言选择">
+          <option value="zh-CN">简体</option>
+          <option value="zh-TW">繁體</option>
+          <option value="en">English</option>
+        </select>
+      </label>
     </header>
 
     <section class="report-card" aria-labelledby="page-title">
       <div class="site-badge" aria-hidden="true">!</div>
-      <p class="eyebrow">维保服务</p>
-      <h1 id="page-title">站点问题报修</h1>
+      <p class="eyebrow" data-i18n="eyebrow">维保服务</p>
+      <h1 id="page-title" data-i18n="pageTitle">站点问题报修</h1>
 
       <form id="report-form" novalidate>
-        <label for="site">站点</label>
+        <label for="site" data-i18n="siteField">站点</label>
         <div class="site-field">
           <input
             id="site"
@@ -32,15 +40,16 @@
             maxlength="12"
             autocomplete="off"
             placeholder="例如 LS01"
+            data-i18n-placeholder="sitePlaceholder"
             required
           >
-          <span id="site-lock" class="lock-label" hidden>二维码已识别</span>
+          <span id="site-lock" class="lock-label" hidden data-i18n="siteLocked">二维码已识别</span>
         </div>
 
         <div class="description-toggle">
           <div>
-            <span class="toggle-title">添加问题描述</span>
-            <span class="toggle-hint">选填，不填写也可以快速报修</span>
+            <span class="toggle-title" data-i18n="descriptionTitle">添加问题描述</span>
+            <span class="toggle-hint" data-i18n="descriptionHint">选填，不填写也可以快速报修</span>
           </div>
           <label class="switch" for="description-enabled">
             <input id="description-enabled" type="checkbox">
@@ -50,75 +59,76 @@
 
         <div id="problem-section" class="problem-section" hidden>
           <fieldset class="quick-issues" aria-labelledby="quick-issues-title">
-            <legend id="quick-issues-title">常见问题</legend>
+            <legend id="quick-issues-title" data-i18n="quickIssues">常见问题</legend>
             <div class="quick-issue-grid">
               <label class="quick-issue">
-                <input type="radio" name="quickIssue" value="箱子不来">
-                <span>箱子不来</span>
+                <input type="radio" name="quickIssue" value="箱子不来" data-issue="boxMissing">
+                <span data-i18n="issueBoxMissing">箱子不来</span>
               </label>
               <label class="quick-issue">
-                <input type="radio" name="quickIssue" value="小车不进站">
-                <span>小车不进站</span>
+                <input type="radio" name="quickIssue" value="小车不进站" data-issue="cartNoEntry">
+                <span data-i18n="issueCartNoEntry">小车不进站</span>
               </label>
               <label class="quick-issue">
-                <input type="radio" name="quickIssue" value="小车进站不放箱">
-                <span>小车进站不放箱</span>
+                <input type="radio" name="quickIssue" value="小车进站不放箱" data-issue="cartNoDrop">
+                <span data-i18n="issueCartNoDrop">小车进站不放箱</span>
               </label>
               <label class="quick-issue">
-                <input type="radio" name="quickIssue" value="其他">
-                <span>其他</span>
+                <input type="radio" name="quickIssue" value="其他" data-issue="other">
+                <span data-i18n="issueOther">其他</span>
               </label>
             </div>
           </fieldset>
 
-          <label for="problem">问题描述</label>
+          <label for="problem" data-i18n="problemDescription">问题描述</label>
           <textarea
             id="problem"
             name="problem"
             maxlength="500"
             rows="6"
             placeholder="请描述设备故障、异常现象或需要协助的内容"
+            data-i18n-placeholder="problemPlaceholder"
           ></textarea>
           <div class="field-meta">
-            <span>请尽量描述清楚，便于维保人员快速处理</span>
+            <span data-i18n="problemHint">请尽量描述清楚，便于维保人员快速处理</span>
             <span id="character-count">0 / 500</span>
           </div>
         </div>
 
         <button id="submit-button" type="submit">
           <span class="button-icon">!</span>
-          <span id="button-text">发送报修</span>
+          <span id="button-text" data-i18n="send">发送报修</span>
         </button>
       </form>
 
       <div id="status" class="status" role="status" aria-live="polite"></div>
 
-      <button id="reply-hint" class="reply-hint" type="button" aria-label="下滑查看客服回复">
+      <button id="reply-hint" class="reply-hint" type="button" aria-label="下滑查看客服回复" data-i18n-aria-label="replyHintAria">
         <span class="reply-hint-arrow" aria-hidden="true">↓</span>
-        <span>下滑客服回复</span>
+        <span data-i18n="replyHint">下滑客服回复</span>
       </button>
 
       <section class="chat-panel" aria-labelledby="chat-title">
         <div class="chat-header">
           <div>
             <p class="chat-kicker">ONLINE SERVICE</p>
-            <h2 id="chat-title">客服回复</h2>
+            <h2 id="chat-title" data-i18n="chatTitle">客服回复</h2>
           </div>
           <div class="chat-status-row">
-            <span id="chat-new-badge" class="chat-new-badge" hidden>新回复</span>
-            <span id="chat-state" class="chat-state">等待站点</span>
+            <span id="chat-new-badge" class="chat-new-badge" hidden data-i18n="newReplyBadge">新回复</span>
+            <span id="chat-state" class="chat-state" data-i18n="chatWaiting">等待站点</span>
           </div>
         </div>
         <div id="chat-list" class="chat-list" aria-live="polite">
-          <p class="chat-empty">客服回复会显示在这里。</p>
+          <p class="chat-empty" data-i18n="chatEmpty">客服回复会显示在这里。</p>
         </div>
       </section>
     </section>
 
-    <footer>WINIT 万邑通 · 站点维保呼叫系统</footer>
+    <footer data-i18n="footer">WINIT 万邑通 · 站点维保呼叫系统</footer>
   </main>
 
   <script src="config.js?v=20260622-1"></script>
-  <script src="app.js?v=20260622-6"></script>
+  <script src="app.js?v=20260622-7"></script>
 </body>
 </html>

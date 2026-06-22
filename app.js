@@ -2,6 +2,7 @@
   "use strict";
 
   var form = document.getElementById("report-form");
+  var languageSelect = document.getElementById("language-select");
   var siteInput = document.getElementById("site");
   var siteLock = document.getElementById("site-lock");
   var descriptionEnabled = document.getElementById("description-enabled");
@@ -18,29 +19,149 @@
   var chatNewBadge = document.getElementById("chat-new-badge");
   var chatList = document.getElementById("chat-list");
 
-  var text = {
-    title: "\u7ad9\u70b9\u62a5\u4fee",
-    invalidSite: "\u8bf7\u8f93\u5165\u6709\u6548\u7ad9\u70b9\u53f7\uff0c\u4f8b\u5982 LS01\u3002",
-    genericFailure: "\u53d1\u9001\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u91cd\u8bd5\u3002",
-    success: "\u62a5\u4fee\u4fe1\u606f\u5df2\u53d1\u9001\uff0c\u7ef4\u4fdd\u4eba\u5458\u5df2\u6536\u5230\u901a\u77e5\u3002",
-    networkFailure: "\u53d1\u9001\u5931\u8d25\uff0c\u8bf7\u68c0\u67e5\u7f51\u7edc\u540e\u91cd\u8bd5\u3002",
-    sending: "\u6b63\u5728\u53d1\u9001...",
-    send: "\u53d1\u9001\u62a5\u4fee",
-    cooldownSuffix: " \u79d2\u540e\u53ef\u518d\u6b21\u53d1\u9001",
-    noService: "\u7f51\u7ad9\u5c1a\u672a\u914d\u7f6e\u901a\u77e5\u670d\u52a1\u3002",
-    reportTitle: "\u7ad9\u70b9\u62a5\u4fee",
-    siteLabel: "\u7ad9\u70b9",
-    problemLabel: "\u95ee\u9898",
-    noProblem: "\u672a\u586b\u5199\uff0c\u73b0\u573a\u8bf7\u6c42\u7ef4\u4fdd",
-    chatWaiting: "\u7b49\u5f85\u7ad9\u70b9",
-    chatConnecting: "\u6b63\u5728\u8fde\u63a5",
-    chatOnline: "\u5df2\u8fde\u63a5",
-    chatNoTopic: "\u6682\u65e0\u5ba2\u670d\u9891\u9053",
-    chatOffline: "\u5ba2\u670d\u6682\u4e0d\u53ef\u7528",
-    chatEmpty: "\u5ba2\u670d\u56de\u590d\u4f1a\u663e\u793a\u5728\u8fd9\u91cc\u3002",
-    chatNoReply: "\u5f53\u524d\u7ad9\u70b9\u6682\u65e0\u5ba2\u670d\u56de\u590d\u3002",
-    newReplyTitle: "\u6709\u65b0\u56de\u590d"
+  var languageStorageKey = "winit-report-language";
+  var translations = {
+    "zh-CN": {
+      htmlLang: "zh-CN",
+      brandSlogan: "智能连接 · 高效响应",
+      languageLabel: "语言",
+      eyebrow: "维保服务",
+      pageTitle: "站点问题报修",
+      title: "站点报修",
+      siteField: "站点",
+      sitePlaceholder: "例如 LS01",
+      siteLocked: "二维码已识别",
+      descriptionTitle: "添加问题描述",
+      descriptionHint: "选填，不填写也可以快速报修",
+      quickIssues: "常见问题",
+      issueBoxMissing: "箱子不来",
+      issueCartNoEntry: "小车不进站",
+      issueCartNoDrop: "小车进站不放箱",
+      issueOther: "其他",
+      problemDescription: "问题描述",
+      problemPlaceholder: "请描述设备故障、异常现象或需要协助的内容",
+      problemHint: "请尽量描述清楚，便于维保人员快速处理",
+      send: "发送报修",
+      sending: "正在发送...",
+      cooldownSuffix: " 秒后可再次发送",
+      replyHint: "下滑客服回复",
+      replyHintAria: "下滑查看客服回复",
+      chatTitle: "客服回复",
+      newReplyBadge: "新回复",
+      chatWaiting: "等待站点",
+      chatConnecting: "正在连接",
+      chatOnline: "已连接",
+      chatNoTopic: "暂无客服频道",
+      chatOffline: "客服暂不可用",
+      chatEmpty: "客服回复会显示在这里。",
+      chatNoReply: "当前站点暂无客服回复。",
+      newReplyTitle: "有新回复",
+      footer: "WINIT 万邑通 · 站点维保呼叫系统",
+      invalidSite: "请输入有效站点号，例如 LS01。",
+      genericFailure: "发送失败，请稍后重试。",
+      success: "报修信息已发送，维保人员已收到通知。",
+      networkFailure: "发送失败，请检查网络后重试。",
+      noService: "网站尚未配置通知服务。",
+      noProblem: "未填写，现场请求维保",
+      reportTitle: "站点报修",
+      siteLabel: "站点",
+      problemLabel: "问题"
+    },
+    "zh-TW": {
+      htmlLang: "zh-Hant",
+      brandSlogan: "智能連接 · 高效響應",
+      languageLabel: "語言",
+      eyebrow: "維保服務",
+      pageTitle: "站點問題報修",
+      title: "站點報修",
+      siteField: "站點",
+      sitePlaceholder: "例如 LS01",
+      siteLocked: "二維碼已識別",
+      descriptionTitle: "添加問題描述",
+      descriptionHint: "選填，不填寫也可以快速報修",
+      quickIssues: "常見問題",
+      issueBoxMissing: "箱子不來",
+      issueCartNoEntry: "小車不進站",
+      issueCartNoDrop: "小車進站不放箱",
+      issueOther: "其他",
+      problemDescription: "問題描述",
+      problemPlaceholder: "請描述設備故障、異常現象或需要協助的內容",
+      problemHint: "請盡量描述清楚，便於維保人員快速處理",
+      send: "發送報修",
+      sending: "正在發送...",
+      cooldownSuffix: " 秒後可再次發送",
+      replyHint: "下滑客服回覆",
+      replyHintAria: "下滑查看客服回覆",
+      chatTitle: "客服回覆",
+      newReplyBadge: "新回覆",
+      chatWaiting: "等待站點",
+      chatConnecting: "正在連接",
+      chatOnline: "已連接",
+      chatNoTopic: "暫無客服頻道",
+      chatOffline: "客服暫不可用",
+      chatEmpty: "客服回覆會顯示在這裡。",
+      chatNoReply: "當前站點暫無客服回覆。",
+      newReplyTitle: "有新回覆",
+      footer: "WINIT 萬邑通 · 站點維保呼叫系統",
+      invalidSite: "請輸入有效站點號，例如 LS01。",
+      genericFailure: "發送失敗，請稍後重試。",
+      success: "報修信息已發送，維保人員已收到通知。",
+      networkFailure: "發送失敗，請檢查網絡後重試。",
+      noService: "網站尚未配置通知服務。",
+      noProblem: "未填寫，現場請求維保",
+      reportTitle: "站點報修",
+      siteLabel: "站點",
+      problemLabel: "問題"
+    },
+    en: {
+      htmlLang: "en",
+      brandSlogan: "Smart connection · Fast response",
+      languageLabel: "Language",
+      eyebrow: "Maintenance",
+      pageTitle: "Site Issue Report",
+      title: "Site Report",
+      siteField: "Site",
+      sitePlaceholder: "Example: LS01",
+      siteLocked: "QR code recognized",
+      descriptionTitle: "Add issue details",
+      descriptionHint: "Optional. You can send a quick report without details.",
+      quickIssues: "Common issues",
+      issueBoxMissing: "Box not coming",
+      issueCartNoEntry: "Cart not entering station",
+      issueCartNoDrop: "Cart enters but does not drop box",
+      issueOther: "Other",
+      problemDescription: "Issue details",
+      problemPlaceholder: "Describe the fault, abnormal behavior, or help needed",
+      problemHint: "Please describe clearly so maintenance can respond quickly",
+      send: "Send Report",
+      sending: "Sending...",
+      cooldownSuffix: " seconds before sending again",
+      replyHint: "Scroll down for support replies",
+      replyHintAria: "Scroll down to view support replies",
+      chatTitle: "Support Replies",
+      newReplyBadge: "New reply",
+      chatWaiting: "Waiting for site",
+      chatConnecting: "Connecting",
+      chatOnline: "Connected",
+      chatNoTopic: "No support channel",
+      chatOffline: "Support unavailable",
+      chatEmpty: "Support replies will appear here.",
+      chatNoReply: "No support replies for this site yet.",
+      newReplyTitle: "New reply",
+      footer: "WINIT · Site maintenance call system",
+      invalidSite: "Enter a valid site code, for example LS01.",
+      genericFailure: "Send failed. Please try again later.",
+      success: "Report sent. Maintenance has been notified.",
+      networkFailure: "Send failed. Please check the network and try again.",
+      noService: "Notification service is not configured.",
+      noProblem: "No details provided. On-site maintenance requested.",
+      reportTitle: "Site Report",
+      siteLabel: "Site",
+      problemLabel: "Issue"
+    }
   };
+  var currentLanguage = readSavedLanguage();
+  var text = translations[currentLanguage];
 
   var sitePattern = /^[A-Z]{2,6}\d{2,4}$/;
   var querySite = detectSiteCode();
@@ -59,12 +180,13 @@
     querySite = querySite.replace(/^\s+|\s+$/g, "").toUpperCase();
   }
 
+  applyLanguage();
+
   if (querySite && sitePattern.test(querySite)) {
     siteInput.value = querySite;
     siteInput.readOnly = true;
     siteLock.style.display = "inline";
-    document.title = querySite + " - WINIT " + text.title;
-    normalTitle = document.title;
+    updateDocumentTitle();
   }
 
   addEvent(problemInput, "input", function () {
@@ -76,9 +198,18 @@
     window.setTimeout(toggleProblemSection, 0);
   });
   addQuickIssueEvents();
+  if (languageSelect) {
+    addEvent(languageSelect, "change", function () {
+      currentLanguage = translations[languageSelect.value] ? languageSelect.value : "zh-CN";
+      text = translations[currentLanguage];
+      saveLanguage(currentLanguage);
+      applyLanguage();
+    });
+  }
 
   addEvent(siteInput, "input", function () {
     siteInput.value = siteInput.value.toUpperCase().replace(/\s+/g, "");
+    updateDocumentTitle();
     scheduleChatRefresh();
   });
 
@@ -117,11 +248,119 @@
     var index;
     for (index = 0; index < quickIssueInputs.length; index += 1) {
       addEvent(quickIssueInputs[index], "change", function () {
-        if (this.value === "\u5176\u4ed6") {
+        if (this.getAttribute("data-issue") === "other") {
           descriptionEnabled.checked = true;
           toggleProblemSection();
         }
       });
+    }
+  }
+
+  function readSavedLanguage() {
+    var saved = "";
+    try {
+      saved = window.localStorage.getItem(languageStorageKey) || "";
+    } catch (error) {
+      saved = "";
+    }
+    return translations[saved] ? saved : "zh-CN";
+  }
+
+  function saveLanguage(language) {
+    try {
+      window.localStorage.setItem(languageStorageKey, language);
+    } catch (error) {
+      return;
+    }
+  }
+
+  function applyLanguage() {
+    var textNodes = document.querySelectorAll("[data-i18n]");
+    var placeholders = document.querySelectorAll("[data-i18n-placeholder]");
+    var ariaLabels = document.querySelectorAll("[data-i18n-aria-label]");
+    var index;
+
+    if (languageSelect) {
+      languageSelect.value = currentLanguage;
+    }
+    document.documentElement.lang = text.htmlLang || currentLanguage;
+
+    for (index = 0; index < textNodes.length; index += 1) {
+      setElementText(textNodes[index], textNodes[index].getAttribute("data-i18n"));
+    }
+    for (index = 0; index < placeholders.length; index += 1) {
+      setElementAttribute(
+        placeholders[index],
+        "placeholder",
+        placeholders[index].getAttribute("data-i18n-placeholder")
+      );
+    }
+    for (index = 0; index < ariaLabels.length; index += 1) {
+      setElementAttribute(
+        ariaLabels[index],
+        "aria-label",
+        ariaLabels[index].getAttribute("data-i18n-aria-label")
+      );
+    }
+
+    updateQuickIssueValues();
+    updateDocumentTitle();
+    refreshDynamicLanguageText();
+  }
+
+  function setElementText(element, key) {
+    if (text[key]) {
+      element.innerHTML = text[key];
+    }
+  }
+
+  function setElementAttribute(element, attribute, key) {
+    if (text[key]) {
+      element.setAttribute(attribute, text[key]);
+    }
+  }
+
+  function updateQuickIssueValues() {
+    var issueMap = {
+      boxMissing: "issueBoxMissing",
+      cartNoEntry: "issueCartNoEntry",
+      cartNoDrop: "issueCartNoDrop",
+      other: "issueOther"
+    };
+    var index;
+    var issueKey;
+    for (index = 0; index < quickIssueInputs.length; index += 1) {
+      issueKey = issueMap[quickIssueInputs[index].getAttribute("data-issue")];
+      if (issueKey && text[issueKey]) {
+        quickIssueInputs[index].value = text[issueKey];
+      }
+    }
+  }
+
+  function updateDocumentTitle() {
+    var site = siteInput.value.replace(/^\s+|\s+$/g, "").toUpperCase();
+    normalTitle = sitePattern.test(site)
+      ? site + " - WINIT " + text.title
+      : "WINIT " + text.title;
+    document.title = normalTitle;
+  }
+
+  function refreshDynamicLanguageText() {
+    if (sending) {
+      buttonText.innerHTML = text.sending;
+    } else if (cooldownRemaining > 0) {
+      updateCooldownText();
+    } else {
+      buttonText.innerHTML = text.send;
+    }
+    if (chatList && !chatList.querySelector(".chat-message")) {
+      chatList.innerHTML =
+        '<p class="chat-empty">' +
+        (activeChatSite ? text.chatNoReply : text.chatEmpty) +
+        "</p>";
+    }
+    if (chatState && !activeChatSite) {
+      setChatState(text.chatWaiting);
     }
   }
 
