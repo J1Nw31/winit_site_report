@@ -418,9 +418,9 @@ button:disabled {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: var(--blue);
+  color: var(--green);
   background: transparent;
-  border: 1px solid #d7e8f2;
+  border: 1px solid #bfe5d4;
   border-radius: 14px;
   box-shadow: none;
   font-size: 13px;
@@ -437,7 +437,7 @@ button:disabled {
   height: 22px;
   place-items: center;
   color: white;
-  background: var(--blue);
+  background: var(--green);
   border-radius: 50%;
   font-size: 15px;
   line-height: 1;
@@ -445,9 +445,9 @@ button:disabled {
 
 .reply-hint.has-new-reply {
   color: white;
-  background: linear-gradient(135deg, var(--red-light), var(--red));
+  background: linear-gradient(135deg, #23a872, var(--green));
   border-color: transparent;
-  box-shadow: 0 10px 22px rgba(217, 31, 55, 0.2);
+  box-shadow: 0 10px 22px rgba(22, 134, 93, 0.22);
 }
 
 .reply-hint.has-new-reply .reply-hint-arrow {
