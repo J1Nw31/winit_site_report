@@ -33,6 +33,7 @@ body {
 }
 
 .brand-header {
+  position: relative;
   min-height: 118px;
   padding: 22px 24px 34px;
   color: white;
@@ -45,6 +46,7 @@ body {
   display: flex;
   align-items: baseline;
   gap: 11px;
+  padding-right: 126px;
 }
 
 .brand-en {
@@ -66,8 +68,11 @@ body {
 }
 
 .language-picker {
+  position: absolute;
+  top: 18px;
+  right: 20px;
   display: inline-flex;
-  margin: 14px 0 0;
+  margin: 0;
   align-items: center;
   gap: 8px;
   color: rgba(255, 255, 255, 0.86);
@@ -76,8 +81,9 @@ body {
 }
 
 .language-picker select {
-  height: 30px;
-  padding: 0 28px 0 10px;
+  height: 28px;
+  max-width: 96px;
+  padding: 0 22px 0 9px;
   color: white;
   background: rgba(255, 255, 255, 0.14);
   border: 1px solid rgba(255, 255, 255, 0.34);
@@ -574,6 +580,22 @@ footer {
 }
 
 @media (max-width: 420px) {
+  .brand-row {
+    padding-right: 106px;
+  }
+
+  .language-picker {
+    top: 16px;
+    right: 14px;
+    gap: 6px;
+    font-size: 11px;
+  }
+
+  .language-picker select {
+    max-width: 82px;
+    padding-left: 8px;
+  }
+
   .report-card {
     padding-right: 18px;
     padding-left: 18px;
