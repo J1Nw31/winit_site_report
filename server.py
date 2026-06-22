@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parent
 SITE_PATTERN = re.compile(r"^[A-Z]{2,6}\d{2,4}$")
 COOLDOWN_SECONDS = 20
 RECENT_REQUESTS = {}
+PUBLIC_PREFIX = "/web-site-report"
 
 
 def env(name, default=""):
@@ -55,7 +56,7 @@ class ReportHandler(BaseHTTPRequestHandler):
 
     def do_HEAD(self):
         parsed = urllib.parse.urlparse(self.path)
-        path = urllib.parse.unquote(parsed.path)
+        path = normalize_path(urllib.parse.unquote(parsed.path))
         if path == "/" or path == "":
             path = "/index.html"
 
@@ -73,7 +74,8 @@ class ReportHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
-        if parsed.path != "/api/report":
+        path = normalize_path(parsed.path)
+        if path != "/api/report":
             json_response(self, {"error": "Not found"}, 404)
             return
 
@@ -139,7 +141,7 @@ class ReportHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
-        path = urllib.parse.unquote(parsed.path)
+        path = normalize_path(urllib.parse.unquote(parsed.path))
         if path == "/api/report":
             json_response(self, {"error": "仅支持 POST 请求。"}, 405)
             return
@@ -170,6 +172,14 @@ def main():
     httpd = ThreadingHTTPServer((host, port), ReportHandler)
     print(f"Serving WINIT site report on http://{host}:{port}")
     httpd.serve_forever()
+
+
+def normalize_path(path):
+    if path == PUBLIC_PREFIX:
+        return "/"
+    if path.startswith(PUBLIC_PREFIX + "/"):
+        return path[len(PUBLIC_PREFIX):]
+    return path
 
 
 if __name__ == "__main__":

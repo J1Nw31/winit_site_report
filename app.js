@@ -508,7 +508,7 @@
     };
 
     try {
-      request.open("POST", "/api/report", true);
+      request.open("POST", getSiteApiPath(), true);
       request.setRequestHeader(
         "Content-Type",
         "application/json; charset=utf-8"
@@ -964,6 +964,11 @@
         config.ntfyServer ||
         "https://hik2.tail6f1a46.ts.net"
     ).replace(/\/+$/, "");
+  }
+
+  function getSiteApiPath() {
+    var config = window.REPORT_CONFIG || {};
+    return String(config.siteApiPath || "/api/report");
   }
 
   function getTopicForSite(site, topicByPrefix, fallback) {

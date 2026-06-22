@@ -1,6 +1,7 @@
 window.REPORT_CONFIG = {
   mode: "server",
-  raspberryPiBaseUrl: "http://172.16.7.60",
+  raspberryPiBaseUrl: "https://hik2.tail6f1a46.ts.net/web-site-report",
+  siteApiPath: "/web-site-report/api/report",
   legacyRedirectHosts: ["j1nw31.github.io"],
   pushServer: "https://hik2.tail6f1a46.ts.net",
   pushTopic: "离线工作站报障",
